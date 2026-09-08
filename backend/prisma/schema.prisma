@@ -1,0 +1,220 @@
+// Prisma schema configured for SQLite (zero-config local dev)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  discordId     String   @unique
+  username      String
+  discriminator String   @default("0")
+  email         String?
+  avatar        String?
+  role          String   @default("USER") // USER | ADMIN
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders         Order[]
+  payments       Payment[]
+  invoices       Invoice[]
+  servers        Server[]
+  tickets        Ticket[]
+  ticketMessages TicketMessage[]
+  activityLogs   ActivityLog[]
+
+  @@map("users")
+}
+
+model HostingPlan {
+  id           String   @id @default(cuid())
+  name         String   @unique // "Pack 1", "Pack 2", "Pack 3"
+  slug         String   @unique // "pack-1", "pack-2", "pack-3"
+  ramGb        Int
+  vcpuCores    Int
+  storageGb    Int
+  bandwidth    String   @default("Unlimited")
+  priceMonthly Float
+  currency     String   @default("INR")
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("hosting_plans")
+}
+
+model OperatingSystem {
+  id        String   @id @default(cuid())
+  name      String   @unique // "Ubuntu 22.04 LTS"
+  slug      String   @unique // "ubuntu-22-04"
+  category  String   // "linux" | "windows"
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("operating_systems")
+}
+
+model Order {
+  id                 String    @id @default(cuid())
+  orderNumber        String    @unique
+  userId             String
+  planId             String
+  osId               String
+  location           String    @default("Mumbai, India")
+  status             String    @default("PENDING") // PENDING | ACTIVE | EXPIRED | CANCELLED
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user    User            @relation(fields: [userId], references: [id])
+  plan    HostingPlan     @relation(fields: [planId], references: [id])
+  os      OperatingSystem @relation(fields: [osId], references: [id])
+  payment Payment?
+  invoice Invoice?
+  server  Server?
+
+  @@map("orders")
+}
+
+model Payment {
+  id         String    @id @default(cuid())
+  userId     String
+  orderId    String    @unique
+  amount     Float
+  currency   String    @default("INR")
+  utr        String    @unique // UTR must be unique
+  status     String    @default("PENDING_VERIFICATION") // PENDING_VERIFICATION | APPROVED | FAILED
+  method     String    @default("UPI")
+  verifiedBy String?   // Admin userId
+  verifiedAt DateTime?
+  failReason String?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  order   Order    @relation(fields: [orderId], references: [id])
+  invoice Invoice?
+  ticket  Ticket?
+
+  @@map("payments")
+}
+
+model Invoice {
+  id                 String    @id @default(cuid())
+  invoiceNumber      String    @unique // INV-2026-000001
+  userId             String
+  orderId            String    @unique
+  paymentId          String    @unique
+  serverId           String?
+  amount             Float
+  tax                Float     @default(0)
+  totalAmount        Float
+  currency           String    @default("INR")
+  status             String    @default("PAID") // DRAFT | PAID | VOID
+  invoiceDate        DateTime  @default(now())
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+  payment Payment @relation(fields: [paymentId], references: [id])
+  server  Server? @relation(fields: [serverId], references: [id])
+
+  @@map("invoices")
+}
+
+model Server {
+  id              String   @id @default(cuid())
+  userId          String
+  orderId         String   @unique
+  name            String?
+  status          String   @default("PROVISIONING") // PROVISIONING | ACTIVE | SUSPENDED | TERMINATED
+  ipAddress       String?
+  port            Int?
+  location        String   @default("Mumbai, India")
+  consoleUrl      String?
+  consoleUsername String?
+  consolePassword String?  // Encrypted / plain at rest — never logged
+  accessNotes     String?
+  accessStatus    String   @default("PENDING") // PENDING | ACCESS_AVAILABLE
+  adminNotes      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  order    Order     @relation(fields: [orderId], references: [id])
+  invoices Invoice[]
+
+  @@map("servers")
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  userId    String
+  paymentId String?  @unique // set for payment-linked tickets
+  type      String   @default("SUPPORT") // SUPPORT | PAYMENT
+  category  String   @default("GENERAL") // BILLING | TECHNICAL | SERVER_UPGRADE | GENERAL
+  title     String
+  status    String   @default("OPEN") // OPEN | IN_PROGRESS | RESOLVED | CLOSED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id])
+  payment  Payment?        @relation(fields: [paymentId], references: [id])
+  messages TicketMessage[]
+
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  message   String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("ticket_messages")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  details   String?  // JSON string
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+}
+
+model InvoiceCounter {
+  id      Int @id @default(1)
+  year    Int
+  counter Int @default(0)
+
+  @@map("invoice_counters")
+}
