@@ -13,6 +13,7 @@ interface VoiceAssistanceContextType {
   acceptIncomingRequest: () => void;
   dismissIncomingRequest: () => void;
   requestVoiceAssistance: (ticketId: string, customerName: string, customerId: string) => void;
+  startDirectVoiceCall: (customSubject?: string) => void;
 }
 
 const VoiceAssistanceContext = createContext<VoiceAssistanceContextType | null>(null);
@@ -63,7 +64,12 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
 
   const acceptIncomingRequest = () => {
     if (incomingRequest) {
-      startCall(`ticket-${incomingRequest.ticketId}`, `Ticket #${incomingRequest.ticketId.slice(-6)} - ${incomingRequest.customerName}`);
+      const isDirect = incomingRequest.ticketId.startsWith('direct-');
+      const roomId = isDirect ? `room-${incomingRequest.ticketId}` : `ticket-${incomingRequest.ticketId}`;
+      const subject = isDirect
+        ? `Live Call • ${incomingRequest.customerName}`
+        : `Ticket #${incomingRequest.ticketId.slice(-6)} - ${incomingRequest.customerName}`;
+      startCall(roomId, subject);
       setIncomingRequest(null);
     }
   };
@@ -75,6 +81,28 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
   const requestVoiceAssistance = (ticketId: string, customerName: string, customerId: string) => {
     socketService.requestVoiceAssistance({ ticketId, customerName, customerId });
     startCall(`ticket-${ticketId}`, `Ticket #${ticketId.slice(-6)} - Voice Assist`);
+  };
+
+  const startDirectVoiceCall = (customSubject?: string) => {
+    const callerName = user?.username || 'Client-' + Math.floor(1000 + Math.random() * 9000);
+    const callerId = user?.id || `client-${Math.random().toString(36).slice(2, 8)}`;
+    const callIdentifier = `direct-${Date.now().toString(36)}`;
+    const roomId = `room-${callIdentifier}`;
+    const subject = customSubject || `Voice Assist • ${callerName}`;
+
+    // Register user if not already registered
+    if (!user) {
+      socketService.registerUser(callerId, callerName, 'USER');
+    }
+
+    // Broadcast assistance request to all online admins
+    socketService.requestVoiceAssistance({
+      ticketId: callIdentifier,
+      customerName: callerName,
+      customerId: callerId,
+    });
+
+    startCall(roomId, subject);
   };
 
   return (
@@ -89,6 +117,7 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
         acceptIncomingRequest,
         dismissIncomingRequest,
         requestVoiceAssistance,
+        startDirectVoiceCall,
       }}
     >
       {children}
@@ -110,7 +139,7 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
           <div className="flex items-center gap-2 ml-4">
             <button
               onClick={acceptIncomingRequest}
-              className="px-3 py-1.5 rounded bg-[#ccff00] hover:bg-[#b8e600] text-black font-mono-tech text-xs font-bold uppercase cursor-pointer"
+              className="px-3 py-1.5 rounded bg-[#ccff00] hover:bg-[#b8e600] text-black font-mono-tech text-xs font-bold uppercase cursor-pointer transition-all hover:scale-105"
             >
               Join Call
             </button>
@@ -125,11 +154,11 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
       )}
 
       {/* Active WebRTC Audio Call Room */}
-      {activeRoomId && user && (
+      {activeRoomId && (
         <AudioCallRoomModal
           roomId={activeRoomId}
-          username={user.username}
-          role={user.role}
+          username={user?.username || 'Client'}
+          role={user?.role || 'USER'}
           ticketSubject={activeSubject || undefined}
           onClose={endCall}
         />

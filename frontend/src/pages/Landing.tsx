@@ -20,7 +20,7 @@ import {
 
 export const Landing: React.FC = () => {
   const navigate = useNavigate();
-  const { presence } = useVoiceAssistance();
+  const { presence, startDirectVoiceCall } = useVoiceAssistance();
   const [plans, setPlans] = useState<HostingPlan[]>([]);
   const [operatingSystems, setOperatingSystems] = useState<OperatingSystem[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
@@ -96,22 +96,27 @@ export const Landing: React.FC = () => {
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center z-10">
-        {/* Status Pill */}
-        <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#11161b] border border-[#1e262e] text-[11px] font-mono-tech tracking-wider text-[#ccff00] mb-8">
+        {/* Status Pill & Click-to-Call Voice Assist */}
+        <div className="inline-flex flex-wrap items-center justify-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#11161b] border border-[#1e262e] text-[11px] font-mono-tech tracking-wider text-[#ccff00] mb-8">
           <span className="w-2 h-2 rounded-full bg-[#ccff00] animate-pulse"></span>
           <span>JARVIS CORE NETWORK ONLINE</span>
           <span className="text-[#2d3844]">•</span>
-          {presence.isAvailable ? (
-            <span className="text-[#ccff00] flex items-center gap-1 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]" />
-              {presence.onlineAdminsCount} {presence.onlineAdminsCount === 1 ? 'Operator' : 'Operators'} Online • Voice Assist Ready
+          <button
+            onClick={() => startDirectVoiceCall('Landing Direct Voice Inquiry')}
+            className={`flex items-center gap-1.5 font-semibold px-2 py-0.5 rounded-full transition-all cursor-pointer hover:scale-105 ${
+              presence.isAvailable
+                ? 'text-[#ccff00] hover:bg-[#ccff00]/20'
+                : 'text-[#8a99ad] hover:text-white hover:bg-[#182028]'
+            }`}
+            title="Click to start live voice call"
+          >
+            <span className={`w-1.5 h-1.5 rounded-full ${presence.isAvailable ? 'bg-[#ccff00] animate-ping' : 'bg-amber-400'}`} />
+            <span>
+              {presence.isAvailable
+                ? `${presence.onlineAdminsCount} ${presence.onlineAdminsCount === 1 ? 'Operator' : 'Operators'} Online • Click to Call`
+                : 'Voice Assist Standby • Click to Call'}
             </span>
-          ) : (
-            <span className="text-[#8a99ad] flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              Voice Remote Assist Standby
-            </span>
-          )}
+          </button>
         </div>
 
         {/* Hero Headline */}

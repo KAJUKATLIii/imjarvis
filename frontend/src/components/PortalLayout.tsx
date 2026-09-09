@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   Copy,
   Check,
+  Headphones,
 } from 'lucide-react';
 
 const AvatarImage: React.FC<{
@@ -49,7 +50,7 @@ const AvatarImage: React.FC<{
 
 export const PortalLayout: React.FC = () => {
   const { user, loading, logout, loginWithDiscord } = useAuth();
-  const { presence } = useVoiceAssistance();
+  const { presence, startDirectVoiceCall } = useVoiceAssistance();
   const location = useLocation();
   const [navOpen, setNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -205,21 +206,28 @@ export const PortalLayout: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Presence Indicator */}
-          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono-tech tracking-wider">
-            {presence.isAvailable ? (
-              <span className="text-[#ccff00] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ccff00]/10 border border-[#ccff00]/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00] animate-pulse"></span>
-                <span>VOICE ASSIST ONLINE ({presence.onlineAdminsCount})</span>
-              </span>
-            ) : (
-              <span className="text-[#5c6b73] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#11161b] border border-[#1e262e]">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                <span>VOICE ASSIST STANDBY</span>
-              </span>
-            )}
-          </div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Voice Assist Click-to-Call Action Button */}
+          <button
+            onClick={() => startDirectVoiceCall(user ? `Direct Assist • @${user.username}` : 'Direct Voice Assist')}
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full font-mono-tech text-[10px] sm:text-[11px] tracking-wider transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.03] ${
+              presence.isAvailable
+                ? 'bg-[#ccff00]/10 hover:bg-[#ccff00]/20 border border-[#ccff00]/40 text-[#ccff00] hover:shadow-[0_0_15px_rgba(204,255,0,0.3)]'
+                : 'bg-[#11161b] hover:bg-[#182028] border border-[#1e262e] hover:border-[#ccff00]/40 text-[#8a99ad] hover:text-white'
+            }`}
+            title={`Click to start instant live voice call with ${presence.isAvailable ? `${presence.onlineAdminsCount} active operators` : 'standby support'}`}
+          >
+            <div className="relative flex items-center justify-center">
+              <Headphones className="w-3.5 h-3.5" />
+              <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${presence.isAvailable ? 'bg-[#ccff00] animate-ping' : 'bg-amber-400'}`} />
+            </div>
+            <span className="hidden sm:inline font-bold">
+              {presence.isAvailable ? `VOICE CALL (${presence.onlineAdminsCount})` : 'VOICE ASSIST CALL'}
+            </span>
+            <span className="sm:hidden font-bold text-[10px]">
+              CALL
+            </span>
+          </button>
 
           {/* Back to website */}
           <Link
