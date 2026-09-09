@@ -18,6 +18,9 @@ import adminRoutes from './routes/admin.routes';
 
 const app = express();
 
+// Trust reverse proxy (Webuzo / Nginx / Apache) for secure HTTPS cookies
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(
   helmet({
@@ -60,10 +63,11 @@ app.use(
     secret: env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
       secure: env.isProduction,
-      sameSite: env.isProduction ? 'none' : 'lax',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   })

@@ -37,10 +37,16 @@ export const authController = {
       req.session.username = user.username;
       req.session.role = user.role as any;
 
-      res.redirect(env.FRONTEND_DASHBOARD_URL);
+      req.session.save((saveErr) => {
+        if (saveErr) {
+          console.error('[Auth] Error saving session:', saveErr);
+          return res.redirect(`${env.FRONTEND_URL}/portal?error=session_error`);
+        }
+        res.redirect(env.FRONTEND_DASHBOARD_URL);
+      });
     } catch (err) {
       console.error('[Auth] Discord callback error:', err);
-      res.redirect(`${env.FRONTEND_URL}/login?error=auth_failed`);
+      res.redirect(`${env.FRONTEND_URL}/portal?error=auth_failed`);
     }
   },
 
