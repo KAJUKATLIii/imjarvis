@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import session from 'express-session';
@@ -89,10 +90,24 @@ app.use('/api/servers', serversRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/admin', adminRoutes);
 
-// 404 Handler
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({ error: 'Endpoint not found.' });
-});
+// Serve React frontend in production
+if (env.isProduction) {
+  const frontendDist = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(frontendDist));
+  // SPA catch-all: serve index.html for client-side routes
+  app.get('*', (req: Request, res: Response) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(frontendDist, 'index.html'));
+    } else {
+      res.status(404).json({ error: 'Endpoint not found.' });
+    }
+  });
+} else {
+  // 404 Handler (dev only)
+  app.use((_req: Request, res: Response) => {
+    res.status(404).json({ error: 'Endpoint not found.' });
+  });
+}
 
 // Global Error Handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
