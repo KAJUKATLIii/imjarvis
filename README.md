@@ -1,5 +1,7 @@
 # JARVIS Hosting — Next-Gen Game Server Infrastructure
 
+[![Discord](https://img.shields.io/discord/1543513775884472402?color=5865F2&label=Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/rSQqnhWATj)
+
 A full-stack, enterprise-grade game server infrastructure hosting platform featuring:
 - **Frontend**: React 19, Vite, TypeScript, Tailwind CSS, and `upi-pay-kit`
 - **Backend**: Node.js, Express, TypeScript, Prisma ORM (PostgreSQL)
