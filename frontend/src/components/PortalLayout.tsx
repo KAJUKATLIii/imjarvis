@@ -19,6 +19,7 @@ import {
   Copy,
   Check,
   Headphones,
+  PhoneOff,
 } from 'lucide-react';
 
 const AvatarImage: React.FC<{
@@ -50,7 +51,7 @@ const AvatarImage: React.FC<{
 
 export const PortalLayout: React.FC = () => {
   const { user, loading, logout, loginWithDiscord } = useAuth();
-  const { presence, startDirectVoiceCall } = useVoiceAssistance();
+  const { presence, startDirectVoiceCall, activeRoomId, endCall } = useVoiceAssistance();
   const location = useLocation();
   const [navOpen, setNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -207,27 +208,38 @@ export const PortalLayout: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Voice Assist Click-to-Call Action Button */}
-          <button
-            onClick={() => startDirectVoiceCall(user ? `Direct Assist • @${user.username}` : 'Direct Voice Assist')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full font-mono-tech text-[10px] sm:text-[11px] tracking-wider transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.03] ${
-              presence.isAvailable
-                ? 'bg-[#ccff00]/10 hover:bg-[#ccff00]/20 border border-[#ccff00]/40 text-[#ccff00] hover:shadow-[0_0_15px_rgba(204,255,0,0.3)]'
-                : 'bg-[#11161b] hover:bg-[#182028] border border-[#1e262e] hover:border-[#ccff00]/40 text-[#8a99ad] hover:text-white'
-            }`}
-            title={`Click to start instant live voice call with ${presence.isAvailable ? `${presence.onlineAdminsCount} active operators` : 'standby support'}`}
-          >
-            <div className="relative flex items-center justify-center">
-              <Headphones className="w-3.5 h-3.5" />
-              <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${presence.isAvailable ? 'bg-[#ccff00] animate-ping' : 'bg-amber-400'}`} />
-            </div>
-            <span className="hidden sm:inline font-bold">
-              {presence.isAvailable ? `VOICE CALL (${presence.onlineAdminsCount})` : 'VOICE ASSIST CALL'}
-            </span>
-            <span className="sm:hidden font-bold text-[10px]">
-              CALL
-            </span>
-          </button>
+          {/* Voice Assist Click-to-Call / Cut Call Action Button */}
+          {activeRoomId ? (
+            <button
+              onClick={endCall}
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full font-mono-tech text-[10px] sm:text-[11px] tracking-wider transition-all duration-200 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.3)] bg-red-600 hover:bg-red-500 text-white font-bold animate-pulse hover:scale-105"
+              title="Cut / End Active Call"
+            >
+              <PhoneOff className="w-3.5 h-3.5" />
+              <span>CUT CALL</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => startDirectVoiceCall(user ? `Direct Assist • @${user.username}` : 'Direct Voice Assist')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full font-mono-tech text-[10px] sm:text-[11px] tracking-wider transition-all duration-200 cursor-pointer shadow-sm hover:scale-[1.03] ${
+                presence.isAvailable
+                  ? 'bg-[#ccff00]/10 hover:bg-[#ccff00]/20 border border-[#ccff00]/40 text-[#ccff00] hover:shadow-[0_0_15px_rgba(204,255,0,0.3)]'
+                  : 'bg-[#11161b] hover:bg-[#182028] border border-[#1e262e] hover:border-[#ccff00]/40 text-[#8a99ad] hover:text-white'
+              }`}
+              title={`Click to start instant live voice call with ${presence.isAvailable ? `${presence.onlineAdminsCount} active operators` : 'standby support'}`}
+            >
+              <div className="relative flex items-center justify-center">
+                <Headphones className="w-3.5 h-3.5" />
+                <span className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ${presence.isAvailable ? 'bg-[#ccff00] animate-ping' : 'bg-amber-400'}`} />
+              </div>
+              <span className="hidden sm:inline font-bold">
+                {presence.isAvailable ? `VOICE CALL (${presence.onlineAdminsCount})` : 'VOICE ASSIST CALL'}
+              </span>
+              <span className="sm:hidden font-bold text-[10px]">
+                CALL
+              </span>
+            </button>
+          )}
 
           {/* Back to website */}
           <Link

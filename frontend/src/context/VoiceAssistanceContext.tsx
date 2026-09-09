@@ -41,14 +41,20 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
     });
 
     const unsubAssistance = socketService.onIncomingAssistance((req) => {
-      if (user?.role === 'ADMIN') {
+      // Only show incoming request to admin if they are not the caller themselves
+      if (user?.role === 'ADMIN' && req.customerId !== user.id) {
         setIncomingRequest(req);
       }
+    });
+
+    const unsubCancelled = socketService.onAssistanceCancelled((data) => {
+      setIncomingRequest((prev) => (prev && prev.ticketId === data.ticketId ? null : prev));
     });
 
     return () => {
       unsubPresence();
       unsubAssistance();
+      unsubCancelled();
     };
   }, [user]);
 
@@ -58,6 +64,10 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
   };
 
   const endCall = () => {
+    if (activeRoomId) {
+      const callId = activeRoomId.replace(/^(room-|ticket-|voice-)/, '');
+      socketService.cancelVoiceAssistance(callId);
+    }
     setActiveRoomId(null);
     setActiveSubject(null);
   };
@@ -75,7 +85,10 @@ export const VoiceAssistanceProvider: React.FC<{ children: React.ReactNode }> = 
   };
 
   const dismissIncomingRequest = () => {
-    setIncomingRequest(null);
+    if (incomingRequest) {
+      socketService.cancelVoiceAssistance(incomingRequest.ticketId);
+      setIncomingRequest(null);
+    }
   };
 
   const requestVoiceAssistance = (ticketId: string, customerName: string, customerId: string) => {

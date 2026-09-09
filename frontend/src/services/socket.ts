@@ -54,11 +54,24 @@ export const socketService = {
     s.emit('assistance:request', data);
   },
 
+  cancelVoiceAssistance(ticketId: string) {
+    const s = getSocket();
+    s.emit('assistance:cancel', { ticketId });
+  },
+
   onIncomingAssistance(callback: (data: AssistanceRequest) => void) {
     const s = getSocket();
     s.on('assistance:incoming', callback);
     return () => {
       s.off('assistance:incoming', callback);
+    };
+  },
+
+  onAssistanceCancelled(callback: (data: { ticketId: string }) => void) {
+    const s = getSocket();
+    s.on('assistance:cancelled', callback);
+    return () => {
+      s.off('assistance:cancelled', callback);
     };
   },
 };

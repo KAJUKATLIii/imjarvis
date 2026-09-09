@@ -241,6 +241,11 @@ export function useWebRTCAudio({ roomId, username, role, onCallEnd }: WebRTCProp
         socket.on('webrtc:peer-left', () => {
           setPeerInfo(null);
           setIsConnected(false);
+          setError('Call ended by the other party.');
+          setTimeout(() => {
+            cleanupCall();
+            onCallEnd?.();
+          }, 1200);
         });
       } catch (err: any) {
         console.error('Microphone or WebRTC initialization error:', err);

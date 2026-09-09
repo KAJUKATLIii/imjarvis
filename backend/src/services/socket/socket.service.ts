@@ -76,10 +76,19 @@ export function initSocketServer(httpServer: HTTPServer): SocketIOServer {
 
     // ─── 2. Assistance Request Notification ──────────────────────────────────
     socket.on('assistance:request', (data: { ticketId: string; customerName: string; customerId: string }) => {
-      // Notify all connected admins
+      // Notify all connected admins EXCEPT the caller themselves (prevents loop/self-ringing)
+      connectedUsers.forEach((user, socketId) => {
+        if (user.role === 'ADMIN' && socketId !== socket.id && user.userId !== data.customerId) {
+          io?.to(socketId).emit('assistance:incoming', data);
+        }
+      });
+    });
+
+    socket.on('assistance:cancel', (data: { ticketId: string }) => {
+      // Notify admins that the call was cancelled / cut by the user
       connectedUsers.forEach((user, socketId) => {
         if (user.role === 'ADMIN') {
-          io?.to(socketId).emit('assistance:incoming', data);
+          io?.to(socketId).emit('assistance:cancelled', data);
         }
       });
     });

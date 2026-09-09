@@ -43,10 +43,11 @@ export const FloatingVoiceAssist: React.FC = () => {
           </div>
           <button
             onClick={endCall}
-            className="ml-2 px-3 py-1.5 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/40 text-xs font-mono-tech uppercase font-bold transition-colors cursor-pointer"
-            title="Leave Call"
+            className="ml-2 px-3 py-1.5 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-mono-tech uppercase font-bold tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_12px_rgba(239,68,68,0.4)]"
+            title="Cut / End Call"
           >
-            Leave
+            <Phone className="w-3.5 h-3.5 rotate-[135deg]" />
+            <span>Cut Call</span>
           </button>
         </div>
       </div>

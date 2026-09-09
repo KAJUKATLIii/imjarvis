@@ -11,6 +11,7 @@ import {
   Volume2,
   AlertCircle,
   Activity,
+  X,
 } from 'lucide-react';
 
 interface AudioCallModalProps {
@@ -82,6 +83,14 @@ export const AudioCallRoomModal: React.FC<AudioCallModalProps> = ({
             <div className="px-2 py-0.5 rounded bg-[#182028] border border-[#1e262e] text-[10px] font-mono-tech text-[#8a99ad]">
               P2P ENCRYPTED
             </div>
+            <button
+              onClick={handleEndCall}
+              className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 transition-colors cursor-pointer"
+              title="Cut / End Call"
+              aria-label="Cut / End Call"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -202,10 +211,11 @@ export const AudioCallRoomModal: React.FC<AudioCallModalProps> = ({
 
           <button
             onClick={handleEndCall}
-            className="px-5 py-2.5 rounded bg-red-600 hover:bg-red-500 text-white font-mono-tech text-xs uppercase font-bold tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.3)]"
+            className="px-5 py-2.5 rounded bg-red-600 hover:bg-red-500 text-white font-mono-tech text-xs uppercase font-bold tracking-wider flex items-center gap-2 transition-colors cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:scale-105"
+            title="Cut / End Call"
           >
             <PhoneOff className="w-4 h-4" />
-            <span>Leave Call</span>
+            <span>Cut Call</span>
           </button>
         </div>
       </div>
