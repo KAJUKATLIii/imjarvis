@@ -6,6 +6,8 @@ declare module 'express-session' {
     discordId: string;
     username: string;
     role: Role;
+    avatar?: string | null;
+    email?: string | null;
   }
 }
 

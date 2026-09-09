@@ -16,6 +16,8 @@ import {
   Hexagon,
   Lock,
   ShieldAlert,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 export const PortalLayout: React.FC = () => {
@@ -23,6 +25,22 @@ export const PortalLayout: React.FC = () => {
   const { presence } = useVoiceAssistance();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+
+  const getAvatarUrl = (u: { avatar?: string; discordId: string }) => {
+    if (u.avatar) {
+      if (u.avatar.startsWith('http')) return u.avatar;
+      const isGif = u.avatar.startsWith('a_');
+      return `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.${isGif ? 'gif' : 'png'}?size=128`;
+    }
+    try {
+      const idx = Number(BigInt(u.discordId || '0') % 5n);
+      return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
+    } catch {
+      return `https://cdn.discordapp.com/embed/avatars/0.png`;
+    }
+  };
 
   // 1. Session verification state
   if (loading) {
@@ -184,34 +202,45 @@ export const PortalLayout: React.FC = () => {
         </div>
 
         {/* User Profile Footer */}
-        <div className="p-4 border-t border-[#1e262e]">
+        <div className="p-4 border-t border-[#1e262e] bg-[#0a0d10]/40">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 overflow-hidden">
-              {user.avatar ? (
+            <button
+              onClick={() => setProfileOpen(true)}
+              className="flex items-center gap-2.5 overflow-hidden text-left group flex-1 p-1 -m-1 rounded hover:bg-[#131920] transition-colors"
+              title="Click to view full profile"
+            >
+              <div className="relative shrink-0">
                 <img
-                  src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
-                  alt=""
-                  className="w-7 h-7 rounded-full border border-[#1e262e] shrink-0"
+                  src={getAvatarUrl(user)}
+                  alt={user.username}
+                  className="w-8 h-8 rounded-full border border-[#2d3844] object-cover group-hover:border-[#ccff00] transition-colors"
+                  onError={(e) => {
+                    const fallback = `https://cdn.discordapp.com/embed/avatars/0.png`;
+                    if ((e.target as HTMLImageElement).src !== fallback) {
+                      (e.target as HTMLImageElement).src = fallback;
+                    }
+                  }}
                 />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-[#182028] border border-[#1e262e] flex items-center justify-center text-[#ccff00] text-xs font-bold shrink-0">
-                  {user.username.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div className="overflow-hidden">
-                <div className="text-xs font-mono-tech font-bold text-white truncate">
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]"></span>
+              </div>
+              <div className="overflow-hidden min-w-0 flex-1">
+                <div className="text-xs font-mono-tech font-bold text-white truncate group-hover:text-[#ccff00] transition-colors">
                   {user.username}
                 </div>
-                <div className="text-[10px] font-mono-tech text-[#5c6b73] truncate">
-                  {user.role}
+                <div className="text-[10px] font-mono-tech text-[#5c6b73] truncate flex items-center gap-1.5">
+                  <span className={user.role === 'ADMIN' ? 'text-amber-400 font-semibold' : 'text-[#8a99ad]'}>
+                    {user.role}
+                  </span>
+                  <span>•</span>
+                  <span className="text-[#3b4754] group-hover:text-[#8a99ad]">View</span>
                 </div>
               </div>
-            </div>
+            </button>
 
             <button
               onClick={logout}
               title="Logout"
-              className="p-1.5 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors"
+              className="p-1.5 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors shrink-0 ml-1"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -259,6 +288,105 @@ export const PortalLayout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+
+      {/* User Profile Modal */}
+      {profileOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-md bg-[#11161b] border border-[#2d3844] rounded-lg shadow-2xl p-6 font-mono-tech space-y-6">
+            <div className="flex items-center justify-between border-b border-[#1e262e] pb-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-[#ccff00]" />
+                <span className="text-sm font-bold text-white uppercase tracking-wider">User Identity & Profile</span>
+              </div>
+              <button
+                onClick={() => setProfileOpen(false)}
+                className="p-1.5 text-[#5c6b73] hover:text-white hover:bg-[#182028] rounded transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Profile Info Card */}
+            <div className="flex items-center gap-4 bg-[#0d1115] border border-[#1e262e] p-4 rounded">
+              <div className="relative">
+                <img
+                  src={getAvatarUrl(user)}
+                  alt={user.username}
+                  className="w-16 h-16 rounded-full border-2 border-[#ccff00] object-cover"
+                  onError={(e) => {
+                    const fallback = `https://cdn.discordapp.com/embed/avatars/0.png`;
+                    if ((e.target as HTMLImageElement).src !== fallback) {
+                      (e.target as HTMLImageElement).src = fallback;
+                    }
+                  }}
+                />
+                <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-[#ccff00] border-2 border-[#0d1115]" title="Online" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-base font-bold text-white truncate">{user.username}</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`px-2 py-0.5 text-[10px] rounded font-bold uppercase tracking-wider ${
+                    user.role === 'ADMIN' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                  }`}>
+                    {user.role}
+                  </span>
+                  <span className="text-[10px] text-[#5c6b73]">Discord Verified</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Details */}
+            <div className="space-y-2.5 text-xs">
+              <div className="flex items-center justify-between p-3 bg-[#0d1115] border border-[#1e262e] rounded">
+                <span className="text-[#8a99ad]">Discord ID</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-mono">{user.discordId}</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(user.discordId);
+                      setCopiedId(true);
+                      setTimeout(() => setCopiedId(false), 2000);
+                    }}
+                    className="p-1 text-[#8a99ad] hover:text-[#ccff00] transition-colors"
+                    title="Copy Discord ID"
+                  >
+                    {copiedId ? <Check className="w-3.5 h-3.5 text-[#ccff00]" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              {user.email && (
+                <div className="flex items-center justify-between p-3 bg-[#0d1115] border border-[#1e262e] rounded">
+                  <span className="text-[#8a99ad]">Email</span>
+                  <span className="text-white">{user.email}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between p-3 bg-[#0d1115] border border-[#1e262e] rounded">
+                <span className="text-[#8a99ad]">Access Level</span>
+                <span className="text-[#ccff00] font-bold uppercase">{user.role === 'ADMIN' ? 'System Administrator' : 'Verified Client'}</span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                onClick={logout}
+                className="flex-1 py-2.5 rounded text-xs font-bold uppercase tracking-wider text-red-400 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+              <button
+                onClick={() => setProfileOpen(false)}
+                className="flex-1 py-2.5 rounded text-xs font-bold uppercase tracking-wider text-white bg-[#1a212a] border border-[#2d3844] hover:border-[#ccff00] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
