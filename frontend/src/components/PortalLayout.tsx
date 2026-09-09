@@ -20,6 +20,33 @@ import {
   Check,
 } from 'lucide-react';
 
+const AvatarImage: React.FC<{
+  user: { username: string; discordId: string; avatar?: string };
+  sizeClass?: string;
+  className?: string;
+}> = ({ user, sizeClass = 'w-8 h-8', className = '' }) => {
+  const [error, setError] = useState(false);
+
+  if (error || !user.discordId) {
+    return (
+      <div
+        className={`${sizeClass} rounded-full bg-[#182028] border border-[#2d3844] flex items-center justify-center text-[#ccff00] font-bold shrink-0 font-mono-tech ${className}`}
+      >
+        {user.username ? user.username.charAt(0).toUpperCase() : '?'}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={`/api/auth/avatar/${user.discordId}`}
+      alt=""
+      className={`${sizeClass} rounded-full border border-[#2d3844] object-cover shrink-0 ${className}`}
+      onError={() => setError(true)}
+    />
+  );
+};
+
 export const PortalLayout: React.FC = () => {
   const { user, loading, logout, loginWithDiscord } = useAuth();
   const { presence } = useVoiceAssistance();
@@ -27,20 +54,6 @@ export const PortalLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
-
-  const getAvatarUrl = (u: { avatar?: string; discordId: string }) => {
-    if (u.avatar) {
-      if (u.avatar.startsWith('http')) return u.avatar;
-      const isGif = u.avatar.startsWith('a_');
-      return `https://cdn.discordapp.com/avatars/${u.discordId}/${u.avatar}.${isGif ? 'gif' : 'png'}?size=128`;
-    }
-    try {
-      const idx = Number(BigInt(u.discordId || '0') % 5n);
-      return `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
-    } catch {
-      return `https://cdn.discordapp.com/embed/avatars/0.png`;
-    }
-  };
 
   // 1. Session verification state
   if (loading) {
@@ -236,17 +249,7 @@ export const PortalLayout: React.FC = () => {
               className="flex items-center gap-2.5 overflow-hidden text-left group flex-1 p-1.5 rounded hover:bg-[#131920] transition-colors"
             >
               <div className="relative shrink-0">
-                <img
-                  src={getAvatarUrl(user)}
-                  alt={user.username}
-                  className="w-8 h-8 rounded-full border border-[#2d3844] object-cover"
-                  onError={(e) => {
-                    const fallback = `https://cdn.discordapp.com/embed/avatars/0.png`;
-                    if ((e.target as HTMLImageElement).src !== fallback) {
-                      (e.target as HTMLImageElement).src = fallback;
-                    }
-                  }}
-                />
+                <AvatarImage user={user} sizeClass="w-8 h-8" />
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]" />
               </div>
               <div className="overflow-hidden min-w-0 flex-1">
@@ -320,17 +323,7 @@ export const PortalLayout: React.FC = () => {
               title="Click to view full profile"
             >
               <div className="relative shrink-0">
-                <img
-                  src={getAvatarUrl(user)}
-                  alt={user.username}
-                  className="w-8 h-8 rounded-full border border-[#2d3844] object-cover group-hover:border-[#ccff00] transition-colors"
-                  onError={(e) => {
-                    const fallback = `https://cdn.discordapp.com/embed/avatars/0.png`;
-                    if ((e.target as HTMLImageElement).src !== fallback) {
-                      (e.target as HTMLImageElement).src = fallback;
-                    }
-                  }}
-                />
+                <AvatarImage user={user} sizeClass="w-8 h-8" className="group-hover:border-[#ccff00] transition-colors" />
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]"></span>
               </div>
               <div className="overflow-hidden min-w-0 flex-1">
@@ -419,17 +412,7 @@ export const PortalLayout: React.FC = () => {
             {/* Profile Info Card */}
             <div className="flex items-center gap-4 bg-[#0d1115] border border-[#1e262e] p-4 rounded">
               <div className="relative">
-                <img
-                  src={getAvatarUrl(user)}
-                  alt={user.username}
-                  className="w-16 h-16 rounded-full border-2 border-[#ccff00] object-cover"
-                  onError={(e) => {
-                    const fallback = `https://cdn.discordapp.com/embed/avatars/0.png`;
-                    if ((e.target as HTMLImageElement).src !== fallback) {
-                      (e.target as HTMLImageElement).src = fallback;
-                    }
-                  }}
-                />
+                <AvatarImage user={user} sizeClass="w-16 h-16" className="border-2 border-[#ccff00]" />
                 <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-[#ccff00] border-2 border-[#0d1115]" title="Online" />
               </div>
               <div className="min-w-0 flex-1">
@@ -464,13 +447,6 @@ export const PortalLayout: React.FC = () => {
                   </button>
                 </div>
               </div>
-
-              {user.email && (
-                <div className="flex items-center justify-between p-3 bg-[#0d1115] border border-[#1e262e] rounded">
-                  <span className="text-[#8a99ad]">Email</span>
-                  <span className="text-white">{user.email}</span>
-                </div>
-              )}
 
               <div className="flex items-center justify-between p-3 bg-[#0d1115] border border-[#1e262e] rounded">
                 <span className="text-[#8a99ad]">Access Level</span>

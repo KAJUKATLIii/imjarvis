@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import { env } from '../config/env';
 import prisma from '../config/prisma';
 import {
@@ -103,6 +104,54 @@ export const authController = {
           email: req.session.email || null,
         },
       });
+    }
+  },
+
+  // GET /api/auth/avatar/:discordId
+  async getAvatar(req: Request, res: Response) {
+    const discordId = String(req.params.discordId || '');
+    try {
+      const user = await prisma.user.findUnique({
+        where: { discordId },
+        select: { avatar: true, discordId: true },
+      });
+
+      let avatarUrl = 'https://cdn.discordapp.com/embed/avatars/0.png';
+      if (user?.avatar) {
+        const isGif = user.avatar.startsWith('a_');
+        avatarUrl = `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.${isGif ? 'gif' : 'png'}?size=128`;
+      } else if (discordId) {
+        try {
+          const idx = Number(BigInt(discordId) % 5n);
+          avatarUrl = `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
+        } catch {}
+      }
+
+      const response = await axios.get(avatarUrl, {
+        responseType: 'stream',
+        timeout: 5000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        },
+      });
+      res.setHeader('Content-Type', String(response.headers['content-type'] || 'image/png'));
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      response.data.pipe(res);
+    } catch (err) {
+      try {
+        const fallbackRes = await axios.get('https://cdn.discordapp.com/embed/avatars/0.png', {
+          responseType: 'stream',
+          timeout: 4000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+          },
+        });
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        fallbackRes.data.pipe(res);
+      } catch {
+        res.status(404).end();
+      }
     }
   },
 
