@@ -12,17 +12,22 @@ import {
   Mic,
   Activity,
   Zap,
+  LogIn,
 } from 'lucide-react';
 
 export const FloatingVoiceAssist: React.FC = () => {
   const { presence, activeRoomId, startDirectVoiceCall, endCall } = useVoiceAssistance();
-  const { user } = useAuth();
+  const { user, loginWithDiscord } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
 
   const handleStartCall = () => {
     setShowPrompt(false);
-    startDirectVoiceCall(user ? `Direct Assist • @${user.username}` : 'Direct Live Voice Assist');
+    if (!user) {
+      loginWithDiscord();
+    } else {
+      startDirectVoiceCall(`Direct Assist • @${user.username}`);
+    }
   };
 
   // If a call is active, render a mini active call status badge in the corner
@@ -109,13 +114,23 @@ export const FloatingVoiceAssist: React.FC = () => {
           </div>
 
           <div className="pt-2">
-            <button
-              onClick={handleStartCall}
-              className="w-full py-2.5 px-4 rounded-xl bg-[#ccff00] hover:bg-[#b8e600] text-black font-mono-tech text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(204,255,0,0.3)] transition-all hover:scale-[1.02] cursor-pointer"
-            >
-              <PhoneCall className="w-4 h-4" />
-              <span>Start Voice Call</span>
-            </button>
+            {user ? (
+              <button
+                onClick={handleStartCall}
+                className="w-full py-2.5 px-4 rounded-xl bg-[#ccff00] hover:bg-[#b8e600] text-black font-mono-tech text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(204,255,0,0.3)] transition-all hover:scale-[1.02] cursor-pointer"
+              >
+                <PhoneCall className="w-4 h-4" />
+                <span>Start Voice Call as @{user.username}</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleStartCall}
+                className="w-full py-2.5 px-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-mono-tech text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(88,101,242,0.3)] transition-all hover:scale-[1.02] cursor-pointer"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Login with Discord to Call</span>
+              </button>
+            )}
           </div>
         </div>
       )}
