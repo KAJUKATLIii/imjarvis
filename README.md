@@ -111,3 +111,7 @@ imjarvis/
 │   └── package.json
 └── README.md
 ```
+
+```
+cd /home/imjarvis/imjarvis && git pull origin main && npm run build
+```

@@ -145,36 +145,60 @@ export const PortalLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0d10] text-[#8a99ad] flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-[#11161b] border-b border-[#1e262e]">
+      {/* Mobile Top Header */}
+      <div className="md:hidden sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[#0d1115]/95 backdrop-blur border-b border-[#1e262e]">
         <Link to="/" className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm">
           <Hexagon className="w-5 h-5 text-[#ccff00]" />
           <span>JARVIS / HOSTING</span>
         </Link>
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 text-white hover:bg-[#182028] rounded border border-[#1e262e]"
-        >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-[#131920] border border-[#1e262e] text-[#ccff00] uppercase">
+            {currentNavItem.label}
+          </span>
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="p-2 text-white hover:bg-[#182028] rounded border border-[#1e262e] transition-colors"
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
-      {/* Left Sidebar */}
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm md:hidden transition-opacity"
+        />
+      )}
+
+      {/* Mobile Slide-over Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-[#0d1115] border-r border-[#1e262e] flex flex-col justify-between transform transition-transform duration-200 md:translate-x-0 md:static ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-64'
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-[#0d1115] border-r border-[#1e262e] flex flex-col justify-between transform transition-transform duration-300 ease-out md:hidden ${
+          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >
         <div>
-          {/* Logo / Header */}
-          <div className="p-5 border-b border-[#1e262e]">
-            <Link to="/" className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm">
+          {/* Drawer Brand Header */}
+          <div className="h-14 px-4 border-b border-[#1e262e] flex items-center justify-between">
+            <Link
+              to="/"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm"
+            >
               <Hexagon className="w-5 h-5 text-[#ccff00]" />
               <span>JARVIS HOSTING /</span>
             </Link>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="p-1.5 text-[#8a99ad] hover:text-white hover:bg-[#182028] rounded"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Navigation Items */}
+          {/* Drawer Nav Links */}
           <nav className="p-3 space-y-1">
             {filteredNavItems.map((item) => {
               const Icon = item.icon;
@@ -184,7 +208,7 @@ export const PortalLayout: React.FC = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded text-xs font-mono-tech transition-colors ${
+                  className={`flex items-center justify-between px-3 py-3 rounded text-xs font-mono-tech transition-all ${
                     isActive
                       ? 'bg-[#131920] text-white border border-[#2d3844]'
                       : 'text-[#8a99ad] hover:text-white hover:bg-[#11161b]'
@@ -201,12 +225,98 @@ export const PortalLayout: React.FC = () => {
           </nav>
         </div>
 
+        {/* Mobile User Profile Footer */}
+        <div className="p-3 border-t border-[#1e262e] bg-[#0a0d10]/60">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                setProfileOpen(true);
+              }}
+              className="flex items-center gap-2.5 overflow-hidden text-left group flex-1 p-1.5 rounded hover:bg-[#131920] transition-colors"
+            >
+              <div className="relative shrink-0">
+                <img
+                  src={getAvatarUrl(user)}
+                  alt={user.username}
+                  className="w-8 h-8 rounded-full border border-[#2d3844] object-cover"
+                  onError={(e) => {
+                    const fallback = `https://cdn.discordapp.com/embed/avatars/0.png`;
+                    if ((e.target as HTMLImageElement).src !== fallback) {
+                      (e.target as HTMLImageElement).src = fallback;
+                    }
+                  }}
+                />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]" />
+              </div>
+              <div className="overflow-hidden min-w-0 flex-1">
+                <div className="text-xs font-mono-tech font-bold text-white truncate">
+                  {user.username}
+                </div>
+                <div className="text-[10px] font-mono-tech text-[#5c6b73] truncate flex items-center gap-1.5">
+                  <span className={user.role === 'ADMIN' ? 'text-amber-400 font-semibold' : 'text-[#8a99ad]'}>
+                    {user.role}
+                  </span>
+                  <span>•</span>
+                  <span>Profile</span>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={logout}
+              title="Logout"
+              className="p-2 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors shrink-0 ml-1"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Desktop Sidebar (Permanent, in-flow, sticky top-0) */}
+      <aside className="hidden md:flex flex-col justify-between w-64 shrink-0 bg-[#0d1115] border-r border-[#1e262e] sticky top-0 h-screen z-30">
+        <div>
+          {/* Logo / Header */}
+          <div className="h-16 px-5 border-b border-[#1e262e] flex items-center">
+            <Link to="/" className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm hover:text-[#ccff00] transition-colors">
+              <Hexagon className="w-5 h-5 text-[#ccff00]" />
+              <span>JARVIS HOSTING /</span>
+            </Link>
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="p-3 space-y-1">
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded text-xs font-mono-tech transition-all ${
+                    isActive
+                      ? 'bg-[#131920] text-white border border-[#2d3844] shadow-sm'
+                      : 'text-[#8a99ad] hover:text-white hover:bg-[#11161b]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#ccff00]' : 'text-[#5c6b73]'}`} />
+                    <span className="tracking-wide">{item.label}</span>
+                  </div>
+                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></span>}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
         {/* User Profile Footer */}
-        <div className="p-4 border-t border-[#1e262e] bg-[#0a0d10]/40">
+        <div className="p-3 border-t border-[#1e262e] bg-[#0a0d10]/60">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setProfileOpen(true)}
-              className="flex items-center gap-2.5 overflow-hidden text-left group flex-1 p-1 -m-1 rounded hover:bg-[#131920] transition-colors"
+              className="flex items-center gap-2.5 overflow-hidden text-left group flex-1 p-1.5 rounded hover:bg-[#131920] transition-colors"
               title="Click to view full profile"
             >
               <div className="relative shrink-0">
@@ -232,7 +342,7 @@ export const PortalLayout: React.FC = () => {
                     {user.role}
                   </span>
                   <span>•</span>
-                  <span className="text-[#3b4754] group-hover:text-[#8a99ad]">View</span>
+                  <span className="text-[#3b4754] group-hover:text-[#8a99ad]">Profile</span>
                 </div>
               </div>
             </button>
@@ -240,7 +350,7 @@ export const PortalLayout: React.FC = () => {
             <button
               onClick={logout}
               title="Logout"
-              className="p-1.5 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors shrink-0 ml-1"
+              className="p-2 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors shrink-0 ml-1"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -249,9 +359,9 @@ export const PortalLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 min-w-0 flex flex-col">
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-[#1e262e] bg-[#0d1115]/80 backdrop-blur-sm px-6 flex items-center justify-between">
+        <header className="hidden md:flex h-16 border-b border-[#1e262e] bg-[#0d1115]/80 backdrop-blur-sm px-6 items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-2 text-xs font-mono-tech text-[#8a99ad]">
             <span className="text-[#5c6b73]">&gt;</span>
             <span className="text-[#5c6b73]">JARVIS / CUSTOMER</span>
@@ -260,14 +370,14 @@ export const PortalLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono-tech tracking-wider">
+            <div className="flex items-center gap-2 text-[10px] font-mono-tech tracking-wider">
               {presence.isAvailable ? (
-                <span className="text-[#ccff00] flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#ccff00]/10 border border-[#ccff00]/20">
+                <span className="text-[#ccff00] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ccff00]/10 border border-[#ccff00]/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00] animate-pulse"></span>
                   <span>VOICE ASSIST ONLINE ({presence.onlineAdminsCount})</span>
                 </span>
               ) : (
-                <span className="text-[#5c6b73] flex items-center gap-1.5">
+                <span className="text-[#5c6b73] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#11161b] border border-[#1e262e]">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                   <span>VOICE ASSIST STANDBY</span>
                 </span>
@@ -275,10 +385,10 @@ export const PortalLayout: React.FC = () => {
             </div>
             <Link
               to="/"
-              className="text-xs font-mono-tech text-[#8a99ad] hover:text-[#ccff00] flex items-center gap-1 transition-colors"
+              className="text-xs font-mono-tech text-[#8a99ad] hover:text-[#ccff00] flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-[#11161b]"
             >
               <span>Back to website</span>
-              <ArrowUpRight className="w-3 h-3" />
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </header>
