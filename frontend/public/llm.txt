@@ -1,0 +1,33 @@
+# JARVIS Hosting — Next-Gen Game Server Infrastructure
+
+> High-performance, game-agnostic server infrastructure for multiplayer communities, studios, and operators. Provisioned in seconds with enterprise NVMe storage, unmetered bandwidth, automated backups, and real-time WebRTC Voice Assist support.
+
+## Key Capabilities
+
+- **Game-Agnostic Hosting**: Optimized for Minecraft, Palworld, Rust, CS2, ARK: Survival Ascended, Valheim, FiveM/GTA V, and custom game server instances.
+- **Enterprise Hardware**: AMD Ryzen 9 7950X / Intel Core i9 processors, PCIe 4.0 NVMe SSDs, DDR5 ECC RAM, and redundant 10Gbps uplinks.
+- **DDoS Mitigation**: Always-on L3/L4/L7 DDoS filtering up to 3.2 Tbps with specialized UDP gaming attack profiles.
+- **Instant Provisioning & UPI Pay Kit**: Seamless checkout with automated UPI verification and instant Discord-linked server dispatch.
+- **Live Voice Remote Assist**: Real-time peer-to-peer WebRTC encrypted voice communication with certified infrastructure engineers directly in the browser portal.
+- **Centralized Management Portal**: Unified server console, real-time telemetry metrics, automated backups, SFTP/SSH access, and billing logs.
+
+## Hosting Plans & Pricing
+
+- **Starter Node**: 4 vCPU, 8 GB DDR5 RAM, 60 GB NVMe SSD — Perfect for small multiplayer groups and staging servers.
+- **Performance Pro**: 8 vCPU, 16 GB DDR5 RAM, 120 GB NVMe SSD — Designed for active gaming communities, modpacks, and high-tickrate servers.
+- **Extreme Dedicated**: 16 vCPU, 32 GB DDR5 RAM, 250 GB NVMe SSD — Maximum performance for commercial game networks, tournaments, and large player bases.
+
+## Operating Systems Supported
+
+- Ubuntu 22.04 LTS / 24.04 LTS
+- Debian 12 (Bookworm)
+- AlmaLinux 9 / Rocky Linux 9
+- Windows Server 2022 Datacenter
+
+## Core Links
+
+- Homepage: https://imjarvis.cloud
+- Server Plans: https://imjarvis.cloud/plans
+- Checkout & Order: https://imjarvis.cloud/checkout
+- Customer Portal: https://imjarvis.cloud/portal
+- Discord Community: https://discord.gg/rSQqnhWATj

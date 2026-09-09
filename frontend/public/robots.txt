@@ -1,0 +1,36 @@
+# Robots.txt for JARVIS Hosting (https://imjarvis.cloud)
+User-agent: *
+Allow: /
+Allow: /plans
+Allow: /checkout
+Disallow: /portal
+Disallow: /portal/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /api/
+Disallow: /api/*
+
+# AI Crawlers & LLM Agents
+User-agent: GPTBot
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /portal/
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Google-Extended
+Allow: /
+
+# Sitemap Location
+Sitemap: https://imjarvis.cloud/sitemap.xml
