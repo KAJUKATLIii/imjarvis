@@ -66,7 +66,7 @@ app.use(
     proxy: true,
     cookie: {
       httpOnly: true,
-      secure: env.isProduction,
+      secure: false, // Must be false behind reverse proxy without X-Forwarded-Proto header
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
