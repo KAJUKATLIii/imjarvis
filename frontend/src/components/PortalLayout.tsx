@@ -51,9 +51,26 @@ export const PortalLayout: React.FC = () => {
   const { user, loading, logout, loginWithDiscord } = useAuth();
   const { presence } = useVoiceAssistance();
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
+
+  // Close navigation on route change
+  React.useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
+
+  // Close navigation or modal on Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setNavOpen(false);
+        setProfileOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // 1. Session verification state
   if (loading) {
@@ -157,139 +174,120 @@ export const PortalLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0d10] text-[#8a99ad] flex flex-col md:flex-row">
-      {/* Mobile Top Header */}
-      <div className="md:hidden sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[#0d1115]/95 backdrop-blur border-b border-[#1e262e]">
-        <Link to="/" className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm">
-          <Hexagon className="w-5 h-5 text-[#ccff00]" />
-          <span>JARVIS / HOSTING</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono-tech px-2 py-0.5 rounded bg-[#131920] border border-[#1e262e] text-[#ccff00] uppercase">
-            {currentNavItem.label}
-          </span>
+    <div className="min-h-screen bg-[#0a0d10] text-[#8a99ad] flex flex-col">
+      {/* Universal Top Header Bar (Both Desktop & Mobile) */}
+      <header className="sticky top-0 z-30 h-16 border-b border-[#1e262e] bg-[#0d1115]/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Menu Toggle Button (Open & Close like mobile on all screens) */}
           <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 text-white hover:bg-[#182028] rounded border border-[#1e262e] transition-colors"
-            aria-label="Toggle menu"
+            onClick={() => setNavOpen(!navOpen)}
+            className="p-2 text-white hover:text-[#ccff00] bg-[#11161b] hover:bg-[#182028] rounded border border-[#1e262e] hover:border-[#ccff00]/40 transition-all flex items-center gap-2 group shadow-sm"
+            aria-label="Toggle navigation"
+            title={navOpen ? 'Close navigation' : 'Open navigation'}
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {navOpen ? <X className="w-5 h-5 text-[#ccff00]" /> : <Menu className="w-5 h-5 group-hover:text-[#ccff00] transition-colors" />}
+            <span className="hidden sm:inline text-xs font-mono-tech uppercase tracking-wider font-semibold">
+              Menu
+            </span>
+          </button>
+
+          {/* Logo / Brand */}
+          <Link to="/" className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm hover:text-[#ccff00] transition-colors ml-1 sm:ml-2">
+            <Hexagon className="w-5 h-5 text-[#ccff00]" />
+            <span className="hidden xs:inline">JARVIS HOSTING</span>
+            <span className="text-[#5c6b73]">/</span>
+          </Link>
+
+          {/* Current Page Tag */}
+          <span className="text-[11px] font-mono-tech px-2.5 py-1 rounded bg-[#131920] border border-[#1e262e] text-[#ccff00] uppercase tracking-wider font-semibold flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00] animate-pulse"></span>
+            <span>{currentNavItem.label}</span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Presence Indicator */}
+          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono-tech tracking-wider">
+            {presence.isAvailable ? (
+              <span className="text-[#ccff00] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ccff00]/10 border border-[#ccff00]/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00] animate-pulse"></span>
+                <span>VOICE ASSIST ONLINE ({presence.onlineAdminsCount})</span>
+              </span>
+            ) : (
+              <span className="text-[#5c6b73] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#11161b] border border-[#1e262e]">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span>VOICE ASSIST STANDBY</span>
+              </span>
+            )}
+          </div>
+
+          {/* Back to website */}
+          <Link
+            to="/"
+            className="hidden md:flex text-xs font-mono-tech text-[#8a99ad] hover:text-[#ccff00] items-center gap-1 transition-colors px-2.5 py-1.5 rounded hover:bg-[#11161b]"
+          >
+            <span>Back to website</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+
+          {/* User Profile Quick Access */}
+          <button
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-2 p-1.5 rounded hover:bg-[#131920] border border-transparent hover:border-[#1e262e] transition-colors"
+            title="View full profile"
+          >
+            <div className="relative shrink-0">
+              <AvatarImage user={user} sizeClass="w-8 h-8" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]"></span>
+            </div>
+            <span className="hidden md:inline text-xs font-mono-tech font-bold text-white max-w-[120px] truncate">
+              {user.username}
+            </span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Backdrop */}
-      {mobileOpen && (
+      {/* Backdrop */}
+      {navOpen && (
         <div
-          onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm md:hidden transition-opacity"
+          onClick={() => setNavOpen(false)}
+          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity"
         />
       )}
 
-      {/* Mobile Slide-over Drawer */}
+      {/* Slide-over Drawer Navbar (Opens and closes on desktop and mobile) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-[#0d1115] border-r border-[#1e262e] flex flex-col justify-between transform transition-transform duration-300 ease-out md:hidden ${
-          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 w-72 sm:w-80 bg-[#0d1115] border-r border-[#1e262e] flex flex-col justify-between transform transition-transform duration-300 ease-out shadow-2xl ${
+          navOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <div>
-          {/* Drawer Brand Header */}
-          <div className="h-14 px-4 border-b border-[#1e262e] flex items-center justify-between">
+          {/* Drawer Header */}
+          <div className="h-16 px-5 border-b border-[#1e262e] flex items-center justify-between bg-[#0a0d10]/60">
             <Link
               to="/"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm"
+              onClick={() => setNavOpen(false)}
+              className="flex items-center gap-2.5 text-white font-mono-tech font-bold text-sm hover:text-[#ccff00] transition-colors"
             >
-              <Hexagon className="w-5 h-5 text-[#ccff00]" />
+              <div className="w-8 h-8 rounded bg-[#11161b] border border-[#1e262e] flex items-center justify-center text-[#ccff00]">
+                <Hexagon className="w-5 h-5 text-[#ccff00]" />
+              </div>
               <span>JARVIS HOSTING /</span>
             </Link>
             <button
-              onClick={() => setMobileOpen(false)}
-              className="p-1.5 text-[#8a99ad] hover:text-white hover:bg-[#182028] rounded"
+              onClick={() => setNavOpen(false)}
+              className="p-1.5 text-[#8a99ad] hover:text-white hover:bg-[#182028] rounded border border-transparent hover:border-[#1e262e] transition-colors"
+              aria-label="Close navigation"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Drawer Nav Links */}
-          <nav className="p-3 space-y-1">
-            {filteredNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={`flex items-center justify-between px-3 py-3 rounded text-xs font-mono-tech transition-all ${
-                    isActive
-                      ? 'bg-[#131920] text-white border border-[#2d3844]'
-                      : 'text-[#8a99ad] hover:text-white hover:bg-[#11161b]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#ccff00]' : 'text-[#5c6b73]'}`} />
-                    <span>{item.label}</span>
-                  </div>
-                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></span>}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Mobile User Profile Footer */}
-        <div className="p-3 border-t border-[#1e262e] bg-[#0a0d10]/60">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => {
-                setMobileOpen(false);
-                setProfileOpen(true);
-              }}
-              className="flex items-center gap-2.5 overflow-hidden text-left group flex-1 p-1.5 rounded hover:bg-[#131920] transition-colors"
-            >
-              <div className="relative shrink-0">
-                <AvatarImage user={user} sizeClass="w-8 h-8" />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]" />
-              </div>
-              <div className="overflow-hidden min-w-0 flex-1">
-                <div className="text-xs font-mono-tech font-bold text-white truncate">
-                  {user.username}
-                </div>
-                <div className="text-[10px] font-mono-tech text-[#5c6b73] truncate flex items-center gap-1.5">
-                  <span className={user.role === 'ADMIN' ? 'text-amber-400 font-semibold' : 'text-[#8a99ad]'}>
-                    {user.role}
-                  </span>
-                  <span>•</span>
-                  <span>Profile</span>
-                </div>
-              </div>
-            </button>
-
-            <button
-              onClick={logout}
-              title="Logout"
-              className="p-2 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors shrink-0 ml-1"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Desktop Sidebar (Permanent, in-flow, sticky top-0) */}
-      <aside className="hidden md:flex flex-col justify-between w-64 shrink-0 bg-[#0d1115] border-r border-[#1e262e] sticky top-0 h-screen z-30">
-        <div>
-          {/* Logo / Header */}
-          <div className="h-16 px-5 border-b border-[#1e262e] flex items-center">
-            <Link to="/" className="flex items-center gap-2 text-white font-mono-tech font-bold text-sm hover:text-[#ccff00] transition-colors">
-              <Hexagon className="w-5 h-5 text-[#ccff00]" />
-              <span>JARVIS HOSTING /</span>
-            </Link>
-          </div>
-
           {/* Navigation Items */}
-          <nav className="p-3 space-y-1">
+          <nav className="p-4 space-y-1.5">
+            <div className="text-[10px] font-mono-tech uppercase tracking-widest text-[#5c6b73] px-3 py-1">
+              Navigation
+            </div>
             {filteredNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -297,7 +295,8 @@ export const PortalLayout: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded text-xs font-mono-tech transition-all ${
+                  onClick={() => setNavOpen(false)}
+                  className={`flex items-center justify-between px-3.5 py-3 rounded text-xs font-mono-tech transition-all ${
                     isActive
                       ? 'bg-[#131920] text-white border border-[#2d3844] shadow-sm'
                       : 'text-[#8a99ad] hover:text-white hover:bg-[#11161b]'
@@ -305,37 +304,41 @@ export const PortalLayout: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <Icon className={`w-4 h-4 ${isActive ? 'text-[#ccff00]' : 'text-[#5c6b73]'}`} />
-                    <span className="tracking-wide">{item.label}</span>
+                    <span className="tracking-wide font-medium">{item.label}</span>
                   </div>
-                  {isActive && <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00]"></span>}
+                  {isActive && (
+                    <span className="w-2 h-2 rounded-full bg-[#ccff00] shadow-[0_0_8px_#ccff00]"></span>
+                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* User Profile Footer */}
-        <div className="p-3 border-t border-[#1e262e] bg-[#0a0d10]/60">
+        {/* Drawer User Profile Footer */}
+        <div className="p-4 border-t border-[#1e262e] bg-[#0a0d10]/80">
           <div className="flex items-center justify-between">
             <button
-              onClick={() => setProfileOpen(true)}
-              className="flex items-center gap-2.5 overflow-hidden text-left group flex-1 p-1.5 rounded hover:bg-[#131920] transition-colors"
-              title="Click to view full profile"
+              onClick={() => {
+                setNavOpen(false);
+                setProfileOpen(true);
+              }}
+              className="flex items-center gap-3 overflow-hidden text-left group flex-1 p-2 rounded hover:bg-[#131920] transition-colors"
             >
               <div className="relative shrink-0">
-                <AvatarImage user={user} sizeClass="w-8 h-8" className="group-hover:border-[#ccff00] transition-colors" />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]"></span>
+                <AvatarImage user={user} sizeClass="w-9 h-9" />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ccff00] border-2 border-[#0d1115]" />
               </div>
               <div className="overflow-hidden min-w-0 flex-1">
                 <div className="text-xs font-mono-tech font-bold text-white truncate group-hover:text-[#ccff00] transition-colors">
                   {user.username}
                 </div>
-                <div className="text-[10px] font-mono-tech text-[#5c6b73] truncate flex items-center gap-1.5">
+                <div className="text-[10px] font-mono-tech text-[#5c6b73] truncate flex items-center gap-1.5 mt-0.5">
                   <span className={user.role === 'ADMIN' ? 'text-amber-400 font-semibold' : 'text-[#8a99ad]'}>
                     {user.role}
                   </span>
                   <span>•</span>
-                  <span className="text-[#3b4754] group-hover:text-[#8a99ad]">Profile</span>
+                  <span className="text-[#8a99ad] group-hover:text-white">Profile</span>
                 </div>
               </div>
             </button>
@@ -343,7 +346,7 @@ export const PortalLayout: React.FC = () => {
             <button
               onClick={logout}
               title="Logout"
-              className="p-2 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors shrink-0 ml-1"
+              className="p-2 text-[#5c6b73] hover:text-red-400 hover:bg-[#11161b] rounded transition-colors shrink-0 ml-1 border border-transparent hover:border-red-500/30"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -352,45 +355,9 @@ export const PortalLayout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        {/* Top Header Bar */}
-        <header className="hidden md:flex h-16 border-b border-[#1e262e] bg-[#0d1115]/80 backdrop-blur-sm px-6 items-center justify-between sticky top-0 z-20">
-          <div className="flex items-center gap-2 text-xs font-mono-tech text-[#8a99ad]">
-            <span className="text-[#5c6b73]">&gt;</span>
-            <span className="text-[#5c6b73]">JARVIS / CUSTOMER</span>
-            <span className="text-[#5c6b73]">&gt;</span>
-            <span className="text-white uppercase font-semibold">{currentNavItem.label}</span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-[10px] font-mono-tech tracking-wider">
-              {presence.isAvailable ? (
-                <span className="text-[#ccff00] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ccff00]/10 border border-[#ccff00]/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#ccff00] animate-pulse"></span>
-                  <span>VOICE ASSIST ONLINE ({presence.onlineAdminsCount})</span>
-                </span>
-              ) : (
-                <span className="text-[#5c6b73] flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#11161b] border border-[#1e262e]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                  <span>VOICE ASSIST STANDBY</span>
-                </span>
-              )}
-            </div>
-            <Link
-              to="/"
-              className="text-xs font-mono-tech text-[#8a99ad] hover:text-[#ccff00] flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-[#11161b]"
-            >
-              <span>Back to website</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
-          <Outlet />
-        </main>
-      </div>
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <Outlet />
+      </main>
 
       {/* User Profile Modal */}
       {profileOpen && (
